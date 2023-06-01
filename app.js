@@ -1,11 +1,14 @@
-class CustomSelect {
+class CustomDropDown {
   #isEvent = true;
   #defaultText = "default text";
   #init = true;
   constructor(el, options) {
     this.$el = typeof el === "string" ? document.querySelector(el) : el;
     this.options = options;
+    if( this.$el ) {
     this.initialisation = this.options.init;
+
+    }
   }
 
   get isOpened() {
@@ -72,7 +75,7 @@ class CustomSelect {
     this.dropdownItems.forEach((btn) => btn.removeAttribute("disabled"));
     this.textLabelButton = currentChoise.textContent;
     currentChoise.classList.add("dropdown-item--active");
-    this.$inputDropDown.value = currentChoise.dataset.value;
+    this.$inputDropDown.value = currentChoise.dataset.value ?? null;
   }
   closeAllDropDown() {
     const selects = document.querySelectorAll(".dropdown");
@@ -80,13 +83,46 @@ class CustomSelect {
   }
 
   initSelect() {
+    this.options?.data && this.render(this.options.data);
+    this.options?.renderTemplate && this.renderTemplate(this.options)
     this.$inputDropDown = this.$el?.querySelector(".dropdown-input");
     this.$btnDropDown = this.$el?.querySelector(".dropdown-toggle");
     this.textLabelButton = this.options.defaultText ?? this.textLabelButton;
     this.isChoises = this.options?.isChoises?.bind(this);
-    this.options?.data && this.render(this.options.data);
     this.$el?.addEventListener("click", this.handlerClickDropDown);
   }
+  renderTemplate(options) {
+      this.$el.innerHTML = ``
+      const template = () => `
+      <button
+        class="dropdown-toggle ${options.renderTemplate?.classes?.button ?? ''}"
+        type="button"
+      >
+      ${this.textLabelButton}
+      </button>
+        <ul class="dropdown-menu">
+        ${
+          options.data?.map((itemSelect, index) => {
+            const keysAttribute = Object.keys(itemSelect);
+            const valuesAttribute = Object.values(itemSelect);
+            return `
+              <li>
+                <a class="dropdown-item ${options.renderTemplate?.classes?.items ?? ''}" data-index="${index}" ${keysAttribute
+                .map((key, i) => `data-${key}="${valuesAttribute[i]}"`)
+                .join(" ")}  href="#"
+                      >${itemSelect.label}</a
+                    >
+              </li>
+            `
+            }).join('')
+        }
+        </ul>
+      <input type="hidden" value="" class="dropdown-input" name="select" />
+    `;
+    this.$el.insertAdjacentHTML("beforeend", template())
+
+  }
+
   render(data) {
     const listDropDown = this.$el.querySelector(".dropdown-menu");
     listDropDown.innerHTML = "";
